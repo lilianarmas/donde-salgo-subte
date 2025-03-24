@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Estaciones y Salidas de Subte</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map { height: 500px; width: 100%; margin-top: 10px; }
+        select { margin: 5px; padding: 5px; }
+    </style>
+</head>
+<body>
+
+    <h2>Seleccione la Línea y la Estación</h2>
+    <label for="linea">Línea de Subte:</label>
+    <select id="linea">
+        <option value="">Seleccione una línea</option>
+    </select>
+
+    <label for="estacion">Estación de Subte:</label>
+    <select id="estacion" disabled>
+        <option value="">Seleccione una estación</option>
+    </select>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/estaciones-de-subte.js"></script>
+    <script src="js/bocas-de-subte.js"></script>
+    <script>
+        let map = L.map('map').setView([-34.6037, -58.3816], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        let markerLayer = L.layerGroup().addTo(map);
+        let bocasLayer = L.layerGroup().addTo(map);
+        let estacionesData = {};
+
+        const lineasDisponibles = ["A", "B", "C", "D", "E", "H"];
+
+        // Cargar líneas en el primer select
+        let lineaSelect = document.getElementById("linea");
+        lineasDisponibles.forEach(linea => {
+            let option = document.createElement("option");
+            option.value = linea;
+            option.textContent = `Línea ${linea}`;
+            lineaSelect.appendChild(option);
+        });
+
+        // Procesar datos del GeoJSON de estaciones
+        function procesarDatos() {
+            estacionesData = {};
+            geojsonDataStations.features.forEach(feature => {
+                let { LINEA, ESTACION } = feature.properties;
+                if (!estacionesData[LINEA]) estacionesData[LINEA] = new Set();
+                estacionesData[LINEA].add(ESTACION);
+            });
+
+            lineaSelect.addEventListener("change", actualizarEstaciones);
+            document.getElementById("estacion").addEventListener("change", actualizarMapa);
+        }
+
+        function actualizarEstaciones() {
+            let lineaSeleccionada = document.getElementById("linea").value;
+            let estacionSelect = document.getElementById("estacion");
+            estacionSelect.innerHTML = '<option value="">Seleccione una estación</option>';
+            estacionSelect.disabled = !lineaSeleccionada;
+
+            if (lineaSeleccionada && estacionesData[lineaSeleccionada]) {
+                estacionesData[lineaSeleccionada].forEach(estacion => {
+                    let option = document.createElement("option");
+                    option.value = estacion;
+                    option.textContent = estacion;
+                    estacionSelect.appendChild(option);
+                });
+            }
+        }
+
+        function actualizarMapa() {
+            let linea = document.getElementById("linea").value;
+            let estacion = document.getElementById("estacion").value;
+            markerLayer.clearLayers();
+            bocasLayer.clearLayers();
+
+            if (!linea || !estacion) return;
+
+            // Mostrar la estación principal
+            let estacionSeleccionada = geojsonDataStations.features.find(f => 
+                f.properties.LINEA === linea && f.properties.ESTACION === estacion
+            );
+
+			if (estacionSeleccionada) {
+                let coords = estacionSeleccionada.geometry.coordinates.reverse(); // Leaflet usa [lat, lng]
+                let marker = L.marker(coords).bindPopup(`<b>${estacion}</b><br>Línea ${linea}`);
+                markerLayer.addLayer(marker);
+                map.setView(coords, 14);
+            }
+
+			let colorLinea = obtenerColorLinea(linea);
+
+            // Mostrar las salidas del subte asociadas
+            geojsonDataExits.features.forEach(feature => {
+                if (feature.properties.estacion === estacion) {
+                    let [lng, lat] = feature.geometry.coordinates;
+					let numeroSalida = feature.properties.numero_de_;
+					let calle = feature.properties.calle || "Calle desconocida";
+					let altura = feature.properties.altura || "";
+					let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}`;
+
+					crearIcono(lat, lng, colorLinea, popupContent, bocasLayer);
+                }
+            });
+        }
+
+        // Función para crear iconos de diferentes colores
+		function crearIcono(lat, lng, color, textoPopup, layer) {
+			let circle = L.circleMarker([lat, lng], {
+				radius: 8, 
+				color: color,
+				fillColor: color,
+				fillOpacity: 0.8
+			}).bindPopup(textoPopup);
+			
+			layer.addLayer(circle);
+		}
+
+		function obtenerColorLinea(linea) {
+			const colores = {
+				"A": "#1E88E5", // Azul fuerte
+				"B": "#D32F2F", // Rojo oscuro (más visible que rojo puro)
+				"C": "#303F9F", // Azul profundo
+				"D": "#388E3C", // Verde fuerte con más azul
+				"E": "#8E24AA", // Púrpura más vibrante (en vez de violeta oscuro)
+				"H": "#FFC107"  // Amarillo anaranjado (para mayor visibilidad)
+			};
+			return colores[linea] || "gray"; // Si no se encuentra, usa gris por defecto
+		}
+
+        procesarDatos();
+    </script>
+
+</body>
+</html>

@@ -49,6 +49,7 @@
 
         // Variable para almacenar el círculo de la ubicación del usuario
         let userCircle = null;
+        let showUbication = false;
 
         // Función para rastrear la ubicación en tiempo real
         function rastrearUbicacion() {
@@ -73,8 +74,11 @@
                             }).addTo(map);
                         }
 
-                        // Centrar el mapa en la nueva ubicación
-                        map.setView([userLat, userLon], 15);
+                        // Centrar el mapa en la nueva ubicación la primera vez
+                        if (!showUbication) {
+                            showUbication = true;
+                            map.setView([userLat, userLon], 15);
+                        }
                     },
                     function (error) {
                         console.error("Error obteniendo ubicación:", error.message);

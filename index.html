@@ -1,15 +1,25 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa de Estaciones y Salidas de Subte</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        #map { height: 500px; width: 100%; margin-top: 10px; }
-        select { margin: 5px; padding: 5px; }
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        select {
+            margin: 5px;
+            padding: 5px;
+        }
     </style>
 </head>
+
 <body>
 
     <h2>Seleccione la Línea y la Estación</h2>
@@ -17,6 +27,8 @@
     <select id="linea">
         <option value="">Seleccione una línea</option>
     </select>
+
+    <br />
 
     <label for="estacion">Estación de Subte:</label>
     <select id="estacion" disabled>
@@ -30,9 +42,52 @@
     <script src="js/bocas-de-subte.js"></script>
     <script>
         let map = L.map('map').setView([-34.6037, -58.3816], 12);
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
+
+        // Variable para almacenar el círculo de la ubicación del usuario
+        let userCircle = null;
+
+        // Función para rastrear la ubicación en tiempo real
+        function rastrearUbicacion() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.watchPosition(
+                    function (position) {
+                        let userLat = position.coords.latitude;
+                        let userLon = position.coords.longitude;
+                        let accuracy = position.coords.accuracy; // Precisión en metros
+
+                        // Si el círculo ya existe, actualizarlo
+                        if (userCircle) {
+                            userCircle.setLatLng([userLat, userLon]); // Mueve el círculo
+                            userCircle.setRadius(accuracy); // Ajusta el radio según la precisión
+                        } else {
+                            // Crear el círculo si no existe
+                            userCircle = L.circle([userLat, userLon], {
+                                color: '#007bff',  // Azul borde
+                                fillColor: '#007bff',  // Azul relleno
+                                fillOpacity: 0.3,  // Transparencia
+                                radius: accuracy  // Radio basado en la precisión del GPS
+                            }).addTo(map);
+                        }
+
+                        // Centrar el mapa en la nueva ubicación
+                        map.setView([userLat, userLon], 15);
+                    },
+                    function (error) {
+                        console.error("Error obteniendo ubicación:", error.message);
+                    },
+                    { enableHighAccuracy: true, maximumAge: 1000 }
+                );
+            } else {
+                console.error("Geolocalización no está soportada en este navegador.");
+            }
+        }
+
+        // Llamar a la función para iniciar el rastreo
+        rastrearUbicacion();
 
         let markerLayer = L.layerGroup().addTo(map);
         let bocasLayer = L.layerGroup().addTo(map);
@@ -87,59 +142,60 @@
             if (!linea || !estacion) return;
 
             // Mostrar la estación principal
-            let estacionSeleccionada = geojsonDataStations.features.find(f => 
+            let estacionSeleccionada = geojsonDataStations.features.find(f =>
                 f.properties.LINEA === linea && f.properties.ESTACION === estacion
             );
 
-			if (estacionSeleccionada) {
+            if (estacionSeleccionada) {
                 let coords = estacionSeleccionada.geometry.coordinates.reverse(); // Leaflet usa [lat, lng]
                 let marker = L.marker(coords).bindPopup(`<b>${estacion}</b><br>Línea ${linea}`);
                 markerLayer.addLayer(marker);
                 map.setView(coords, 14);
             }
 
-			let colorLinea = obtenerColorLinea(linea);
+            let colorLinea = obtenerColorLinea(linea);
 
             // Mostrar las salidas del subte asociadas
             geojsonDataExits.features.forEach(feature => {
                 if (feature.properties.estacion === estacion) {
                     let [lng, lat] = feature.geometry.coordinates;
-					let numeroSalida = feature.properties.numero_de_;
-					let calle = feature.properties.calle || "Calle desconocida";
-					let altura = feature.properties.altura || "";
-					let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}`;
+                    let numeroSalida = feature.properties.numero_de_;
+                    let calle = feature.properties.calle || "Calle desconocida";
+                    let altura = feature.properties.altura || "";
+                    let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}`;
 
-					crearIcono(lat, lng, colorLinea, popupContent, bocasLayer);
+                    crearIcono(lat, lng, colorLinea, popupContent, bocasLayer);
                 }
             });
         }
 
         // Función para crear iconos de diferentes colores
-		function crearIcono(lat, lng, color, textoPopup, layer) {
-			let circle = L.circleMarker([lat, lng], {
-				radius: 8, 
-				color: color,
-				fillColor: color,
-				fillOpacity: 0.8
-			}).bindPopup(textoPopup);
-			
-			layer.addLayer(circle);
-		}
+        function crearIcono(lat, lng, color, textoPopup, layer) {
+            let circle = L.circleMarker([lat, lng], {
+                radius: 8,
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.8
+            }).bindPopup(textoPopup);
 
-		function obtenerColorLinea(linea) {
-			const colores = {
-				"A": "#1E88E5", // Azul fuerte
-				"B": "#D32F2F", // Rojo oscuro (más visible que rojo puro)
-				"C": "#303F9F", // Azul profundo
-				"D": "#388E3C", // Verde fuerte con más azul
-				"E": "#8E24AA", // Púrpura más vibrante (en vez de violeta oscuro)
-				"H": "#FFC107"  // Amarillo anaranjado (para mayor visibilidad)
-			};
-			return colores[linea] || "gray"; // Si no se encuentra, usa gris por defecto
-		}
+            layer.addLayer(circle);
+        }
+
+        function obtenerColorLinea(linea) {
+            const colores = {
+                "A": "#1E88E5", // Azul fuerte
+                "B": "#D32F2F", // Rojo oscuro (más visible que rojo puro)
+                "C": "#303F9F", // Azul profundo
+                "D": "#388E3C", // Verde fuerte con más azul
+                "E": "#8E24AA", // Púrpura más vibrante (en vez de violeta oscuro)
+                "H": "#FFC107"  // Amarillo anaranjado (para mayor visibilidad)
+            };
+            return colores[linea] || "gray"; // Si no se encuentra, usa gris por defecto
+        }
 
         procesarDatos();
     </script>
 
 </body>
+
 </html>

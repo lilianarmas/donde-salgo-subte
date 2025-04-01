@@ -4,7 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa de Estaciones y Salidas de Subte</title>
+    <title>¿Dónde salgo subte?</title>
+
+    <!-- Favicon estándar -->
+    <link rel="shortcut icon" sizes="16x16" href="img/favicon-16x16.ico">
+    <link rel="shortcut icon" sizes="32x32" href="img/favicon-32x32.ico">
+    <link rel="shortcut icon" sizes="64x64" href="img/favicon-64x64.ico">
+
+    <!-- Para Android y Chrome (favicon en alta resolución) -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/img/favicon.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/img/favicon.png">
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         #map {
@@ -13,27 +23,77 @@
             margin-top: 10px;
         }
 
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #222;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .logo {
+            width: 100px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 24px;
+            color: #FFD700; /* Amarillo Subte */
+        }
+
+        label {
+            display: block;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
         select {
-            margin: 5px;
-            padding: 5px;
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #FFD700; /* Amarillo Subte */
+            border-radius: 8px;
+            background-color: #333;
+            color: #FFD700;
+            appearance: none;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        select:disabled {
+            border-color: #777;
+            color: #777;
+            cursor: not-allowed;
+        }
+
+        select:hover {
+            background-color: #444;
         }
     </style>
 </head>
 
 <body>
 
-    <h2>Seleccione la Línea y la Estación</h2>
-    <label for="linea">Línea de Subte:</label>
-    <select id="linea">
-        <option value="">Seleccione una línea</option>
-    </select>
+    <div class="container">
+        <img src="img/logo.png" alt="Logo Subte" class="logo">
+        <h2>¿Dónde salgo subte?</h2>
 
-    <br />
+        <select id="linea">
+            <option value="">Seleccione una línea</option>
+        </select>
 
-    <label for="estacion">Estación de Subte:</label>
-    <select id="estacion" disabled>
-        <option value="">Seleccione una estación</option>
-    </select>
+        <select id="estacion" disabled>
+            <option value="">Seleccione una estación</option>
+        </select>
+    </div>
 
     <div id="map"></div>
 
@@ -105,6 +165,7 @@
             let option = document.createElement("option");
             option.value = linea;
             option.textContent = `Línea ${linea}`;
+            option.style = `background-color: ${obtenerColorLinea(linea)}; color: #fff;`;
             lineaSelect.appendChild(option);
         });
 

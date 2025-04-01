@@ -227,7 +227,8 @@
                     let numeroSalida = feature.properties.numero_de_;
                     let calle = feature.properties.calle || "Calle desconocida";
                     let altura = feature.properties.altura || "";
-                    let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}`;
+                    let escalera_m = feature.properties.escalera_m;
+                    let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}${escalera_m == "True" ? '<br>Escalera mecánica' : ''}`;
 
                     crearIcono(lat, lng, colorLinea, popupContent, bocasLayer);
                 }

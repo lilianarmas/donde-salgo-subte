@@ -44,7 +44,8 @@
 
         h2 {
             font-size: 24px;
-            color: #FFD700; /* Amarillo Subte */
+            color: #FFD700;
+            /* Amarillo Subte */
         }
 
         label {
@@ -57,7 +58,8 @@
             width: 100%;
             padding: 10px;
             font-size: 16px;
-            border: 2px solid #FFD700; /* Amarillo Subte */
+            border: 2px solid #FFD700;
+            /* Amarillo Subte */
             border-radius: 8px;
             background-color: #333;
             color: #FFD700;
@@ -213,9 +215,9 @@
 
             if (estacionSeleccionada) {
                 let coords = estacionSeleccionada.geometry.coordinates.reverse(); // Leaflet usa [lat, lng]
-                let marker = L.marker(coords).bindPopup(`<b>${estacion}</b><br>Línea ${linea}`);
-                markerLayer.addLayer(marker);
-                map.setView(coords, 14);
+                //let marker = L.marker(coords).bindPopup(`<b>${estacion}</b><br>Línea ${linea}`);
+                //markerLayer.addLayer(marker);
+                map.setView(coords, 50);
             }
 
             let colorLinea = obtenerColorLinea(linea);
@@ -230,21 +232,26 @@
                     let escalera_m = feature.properties.escalera_m;
                     let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}${escalera_m == "True" ? '<br>Escalera mecánica' : ''}`;
 
-                    crearIcono(lat, lng, colorLinea, popupContent, bocasLayer);
+                    crearIcono(lat, lng, colorLinea, popupContent, numeroSalida, bocasLayer);
                 }
             });
         }
 
         // Función para crear iconos de diferentes colores
-        function crearIcono(lat, lng, color, textoPopup, layer) {
-            let circle = L.circleMarker([lat, lng], {
-                radius: 8,
-                color: color,
-                fillColor: color,
-                fillOpacity: 0.8
-            }).bindPopup(textoPopup);
+        function crearIcono(lat, lng, color, textoPopup, numero, layer) {
+            // Crear un icono con el número dentro de un círculo
+            let iconoSalida = L.divIcon({
+                className: 'icono-salida',
+                html: `<div class="salida" style="background-color:${color}"><b>${numero}</b></div>`,
+                iconSize: [24, 24], // Tamaño del icono
+                iconAnchor: [12, 12] // Centro del icono
+            });
 
-            layer.addLayer(circle);
+            // Crear el marcador con el icono y el popup
+            let marker = L.marker([lat, lng], { icon: iconoSalida }).bindPopup(textoPopup);
+
+            // Agregar al layer correspondiente
+            layer.addLayer(marker);
         }
 
         function obtenerColorLinea(linea) {

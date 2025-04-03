@@ -15,6 +15,8 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/img/favicon.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/img/favicon.png">
 
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         #map {
@@ -28,7 +30,11 @@
             background-color: #222;
             color: #fff;
             text-align: center;
-            padding: 20px;
+            padding: 0 20px 20px 20px;
+        }
+
+        h2 {
+            margin: 10px;
         }
 
         .container {
@@ -38,8 +44,8 @@
         }
 
         .logo {
-            width: 100px;
-            margin-bottom: 10px;
+            width: 70px;
+            margin-bottom: 5px;
         }
 
         h2 {
@@ -78,6 +84,12 @@
 
         select:hover {
             background-color: #444;
+        }
+
+        .escalera-icon {
+            font-size: 12px;
+            color: white;
+            margin-left: 3px;
         }
     </style>
 </head>
@@ -229,20 +241,27 @@
                     let numeroSalida = feature.properties.numero_de_;
                     let calle = feature.properties.calle || "Calle desconocida";
                     let altura = feature.properties.altura || "";
-                    let escalera_m = feature.properties.escalera_m;
-                    let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}${escalera_m == "True" ? '<br>Escalera mecánica' : ''}`;
+                    let destino = feature.properties.destino_bo && !feature.properties.destino_bo.includes('Salida') ? `<br>${feature.properties.destino_bo}` : "";
+                    let escalera_m = feature.properties.escalera_m === "True" ? "<br>Escalera mecánica" : "";
+                    let observacion = feature.properties.observacio ? `<br>${feature.properties.observacio}` : "";
+                    let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}${destino}${escalera_m}${observacion}`;
 
-                    crearIcono(lat, lng, colorLinea, popupContent, numeroSalida, bocasLayer);
+                    crearIcono(lat, lng, colorLinea, popupContent, numeroSalida, feature.properties.escalera_m, bocasLayer);
                 }
             });
         }
 
         // Función para crear iconos de diferentes colores
-        function crearIcono(lat, lng, color, textoPopup, numero, layer) {
+        function crearIcono(lat, lng, color, textoPopup, numero, escaleraMecanica, layer) {
+            // Si la salida tiene escalera mecánica, agregar un ícono
+            let iconoEscalera = escaleraMecanica === "True"
+                ? '<i class="material-icons escalera-icon">escalator</i>'
+                : '';
+
             // Crear un icono con el número dentro de un círculo
             let iconoSalida = L.divIcon({
                 className: 'icono-salida',
-                html: `<div class="salida" style="background-color:${color}"><b>${numero}</b></div>`,
+                html: `<div class="salida" style="background-color:${color}"><b>${numero}${iconoEscalera}</b></div>`,
                 iconSize: [24, 24], // Tamaño del icono
                 iconAnchor: [12, 12] // Centro del icono
             });

@@ -112,19 +112,23 @@
 <body>
 
     <div class="container">
-        <img src="img/logo.png" alt="Logo Subte" class="logo">
-        <h2>¿Dónde salgo subte?</h2>
+        <form id="formBusqueda">
+            <img src="img/logo.jpg" alt="Logo Subte" class="logo">
+            <h2>¿Dónde salgo subte?</h2>
 
-        <input id="search" type="text" placeholder="Buscar dirección..." />
-        <div id="alerta"></div>
+            <input id="search" type="text" placeholder="Buscar dirección..." />
+            <div id="alerta"></div>
 
-        <select id="linea">
-            <option value="">Seleccione una línea</option>
-        </select>
+            <select id="linea">
+                <option value="">Seleccione una línea</option>
+            </select>
 
-        <select id="estacion" disabled>
-            <option value="">Seleccione una estación</option>
-        </select>
+            <select id="estacion" disabled>
+                <option value="">Seleccione una estación</option>
+            </select>
+
+            <button type="submit" style="display: none;"></button> <!-- importante para móvil -->
+        </form>
 
         <div id="salida-seleccionada"></div>
     </div>
@@ -191,11 +195,18 @@
         let bocasLayer = L.layerGroup().addTo(map);
         let estacionesData = {};
 
+        let formBusqueda = document.getElementById("formBusqueda");
         let search = document.getElementById("search");
         let lineaSelect = document.getElementById("linea");
         let estacionSelect = document.getElementById("estacion");
         let salidaSeleccionada = document.getElementById("salida-seleccionada");
         let alerta = document.getElementById("alerta");
+
+        formBusqueda.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const direccion = search.value;
+            buscarDireccion(direccion);
+        });
 
         // Cargar líneas en el primer select
         const lineasDisponibles = ["A", "B", "C", "D", "E", "H"];
@@ -216,7 +227,6 @@
                 estacionesData[LINEA].add(ESTACION);
             });
 
-            search.addEventListener("keydown", buscarDireccion);
             lineaSelect.addEventListener("change", actualizarEstaciones);
             estacionSelect.addEventListener("change", actualizarMapa);
         }
@@ -276,62 +286,60 @@
             });
         }
 
-        async function buscarDireccion(e) {
+        async function buscarDireccion(direccion) {
             let marker;
 
-            if (e.key === 'Enter') {
-                const query = e.target.value;
-                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+            const query = direccion;
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
 
-                const response = await fetch(url, {
-                    headers: {
-                        'User-Agent': 'TuApp/1.0'
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'TuApp/1.0'
+                }
+            });
+            const results = await response.json();
+
+            if (results.length > 0) {
+                const result = results[0];
+                const lat = result.lat;
+                const lon = result.lon;
+
+                if (marker) map.removeLayer(marker);
+
+                marker = L.marker([lat, lon]).addTo(map);
+                map.setView([lat, lon], 16);
+
+                // Buscar boca de subte más cercana
+                let distanciaMinima = Infinity;
+                let bocaCercana = null;
+
+                const bocasSubte = geojsonDataExits.features;
+
+                bocasSubte.forEach(boca => {
+                    const [lonSubte, latSubte] = boca.geometry.coordinates;
+                    const distancia = map.distance([lat, lon], [latSubte, lonSubte]);
+                    if (distancia < distanciaMinima) {
+                        distanciaMinima = distancia;
+                        bocaCercana = boca;
                     }
                 });
-                const results = await response.json();
 
-                if (results.length > 0) {
-                    const result = results[0];
-                    const lat = result.lat;
-                    const lon = result.lon;
-
-                    if (marker) map.removeLayer(marker);
-
-                    marker = L.marker([lat, lon]).addTo(map);
-                    map.setView([lat, lon], 16);
-
-                    // Buscar boca de subte más cercana
-                    let distanciaMinima = Infinity;
-                    let bocaCercana = null;
-
-                    const bocasSubte = geojsonDataExits.features;
-
-                    bocasSubte.forEach(boca => {
-                        const [lonSubte, latSubte] = boca.geometry.coordinates;
-                        const distancia = map.distance([lat, lon], [latSubte, lonSubte]);
-                        if (distancia < distanciaMinima) {
-                            distanciaMinima = distancia;
-                            bocaCercana = boca;
-                        }
-                    });
-
-                    if (bocaCercana && bocaCercana.properties) {
-                        console.log(bocaCercana);
+                if (bocaCercana && bocaCercana.properties) {
+                    console.log(bocaCercana);
 
 
-                        lineaSelect.value = bocaCercana.properties.linea;
-                        lineaSelect.dispatchEvent(new Event("change"));
+                    lineaSelect.value = bocaCercana.properties.linea;
+                    lineaSelect.dispatchEvent(new Event("change"));
 
-                        estacionSelect.value = bocaCercana.properties.estacion;
-                        estacionSelect.dispatchEvent(new Event("change"));
+                    estacionSelect.value = bocaCercana.properties.estacion;
+                    estacionSelect.dispatchEvent(new Event("change"));
 
-                        salidaSeleccionada.innerHTML = "Salida sugerida: " + bocaCercana.properties.numero_de_;
-                    }
-
-                    alerta.innerHTML = '';
-                } else {
-                    alerta.innerHTML = 'Dirección no encontrada';
+                    salidaSeleccionada.innerHTML = "Salida sugerida: " + bocaCercana.properties.numero_de_;
                 }
+
+                alerta.innerHTML = '';
+            } else {
+                alerta.innerHTML = 'Dirección no encontrada';
             }
         }
 

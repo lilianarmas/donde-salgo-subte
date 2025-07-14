@@ -60,7 +60,8 @@
             margin-top: 10px;
         }
 
-        select {
+        select,
+        input {
             width: 100%;
             padding: 10px;
             font-size: 16px;
@@ -71,9 +72,12 @@
             color: #FFD700;
             appearance: none;
             outline: none;
-            cursor: pointer;
             transition: all 0.3s ease;
             margin-bottom: 10px;
+        }
+
+        select {
+            cursor: pointer;
         }
 
         select:disabled {
@@ -91,6 +95,17 @@
             color: white;
             margin-left: 3px;
         }
+
+        #salida-seleccionada {
+            font-size: 16px;
+            color: #FFD700;
+        }
+
+        #alerta {
+            font-size: 12px;
+            color: red;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 
@@ -100,6 +115,9 @@
         <img src="img/logo.png" alt="Logo Subte" class="logo">
         <h2>¿Dónde salgo subte?</h2>
 
+        <input id="search" type="text" placeholder="Buscar dirección..." />
+        <div id="alerta"></div>
+
         <select id="linea">
             <option value="">Seleccione una línea</option>
         </select>
@@ -107,6 +125,8 @@
         <select id="estacion" disabled>
             <option value="">Seleccione una estación</option>
         </select>
+
+        <div id="salida-seleccionada"></div>
     </div>
 
     <div id="map"></div>
@@ -171,10 +191,14 @@
         let bocasLayer = L.layerGroup().addTo(map);
         let estacionesData = {};
 
-        const lineasDisponibles = ["A", "B", "C", "D", "E", "H"];
+        let search = document.getElementById("search");
+        let lineaSelect = document.getElementById("linea");
+        let estacionSelect = document.getElementById("estacion");
+        let salidaSeleccionada = document.getElementById("salida-seleccionada");
+        let alerta = document.getElementById("alerta");
 
         // Cargar líneas en el primer select
-        let lineaSelect = document.getElementById("linea");
+        const lineasDisponibles = ["A", "B", "C", "D", "E", "H"];
         lineasDisponibles.forEach(linea => {
             let option = document.createElement("option");
             option.value = linea;
@@ -192,8 +216,9 @@
                 estacionesData[LINEA].add(ESTACION);
             });
 
+            search.addEventListener("keydown", buscarDireccion);
             lineaSelect.addEventListener("change", actualizarEstaciones);
-            document.getElementById("estacion").addEventListener("change", actualizarMapa);
+            estacionSelect.addEventListener("change", actualizarMapa);
         }
 
         function actualizarEstaciones() {
@@ -249,6 +274,65 @@
                     crearIcono(lat, lng, colorLinea, popupContent, numeroSalida, feature.properties.escalera_m, bocasLayer);
                 }
             });
+        }
+
+        async function buscarDireccion(e) {
+            let marker;
+
+            if (e.key === 'Enter') {
+                const query = e.target.value;
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+
+                const response = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'TuApp/1.0'
+                    }
+                });
+                const results = await response.json();
+
+                if (results.length > 0) {
+                    const result = results[0];
+                    const lat = result.lat;
+                    const lon = result.lon;
+
+                    if (marker) map.removeLayer(marker);
+
+                    marker = L.marker([lat, lon]).addTo(map);
+                    map.setView([lat, lon], 16);
+
+                    // Buscar boca de subte más cercana
+                    let distanciaMinima = Infinity;
+                    let bocaCercana = null;
+
+                    const bocasSubte = geojsonDataExits.features;
+
+                    bocasSubte.forEach(boca => {
+                        const [lonSubte, latSubte] = boca.geometry.coordinates;
+                        const distancia = map.distance([lat, lon], [latSubte, lonSubte]);
+                        if (distancia < distanciaMinima) {
+                            distanciaMinima = distancia;
+                            bocaCercana = boca;
+                        }
+                    });
+
+                    if (bocaCercana && bocaCercana.properties) {
+                        console.log(bocaCercana);
+
+
+                        lineaSelect.value = bocaCercana.properties.linea;
+                        lineaSelect.dispatchEvent(new Event("change"));
+
+                        estacionSelect.value = bocaCercana.properties.estacion;
+                        estacionSelect.dispatchEvent(new Event("change"));
+
+                        salidaSeleccionada.innerHTML = "Salida sugerida: " + bocaCercana.properties.numero_de_;
+                    }
+
+                    alerta.innerHTML = '';
+                } else {
+                    alerta.innerHTML = 'Dirección no encontrada';
+                }
+            }
         }
 
         // Función para crear iconos de diferentes colores

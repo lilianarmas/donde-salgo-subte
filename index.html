@@ -51,7 +51,6 @@
         h2 {
             font-size: 24px;
             color: #FFD700;
-            /* Amarillo Subte */
         }
 
         label {
@@ -61,12 +60,11 @@
         }
 
         select,
-        input {
+        #search {
             width: 100%;
             padding: 10px;
             font-size: 16px;
             border: 2px solid #FFD700;
-            /* Amarillo Subte */
             border-radius: 8px;
             background-color: #333;
             color: #FFD700;
@@ -106,17 +104,61 @@
             color: red;
             margin-bottom: 5px;
         }
+
+        .busqueda-container {
+            width: 100%;
+        }
+
+        .input-lupa-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        #botonBuscar {
+            position: absolute;
+            top: 50%;
+            right: 2px;
+            transform: translateY(-60%);
+            background: none;
+            border: none;
+            color: #FFD700;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            align-items: center;
+        }
+
+        #botonBuscar:hover {
+            transform: translateY(-60%) scale(1.2);
+        }
+
+        .icon-lupa {
+            width: 20px;
+            height: 20px;
+            stroke: #FFD700;
+        }
     </style>
 </head>
 
 <body>
 
     <div class="container">
-        <form id="formBusqueda">
+        <form id="formBusqueda" class="busqueda-container">
             <img src="img/logo.jpg" alt="Logo Subte" class="logo">
             <h2>¿Dónde salgo subte?</h2>
 
-            <input id="search" type="text" placeholder="Buscar dirección..." />
+            <div class="input-lupa-wrapper">
+                <input id="search" type="text" placeholder="Buscar dirección..." />
+                <button type="submit" id="botonBuscar" aria-label="Buscar">
+                    <svg class="icon-lupa" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                        fill="none">
+                        <path
+                            d="M21 21L15.5 15.5M10.5 18C6.91 18 4 15.09 4 11.5C4 7.91 6.91 5 10.5 5C14.09 5 17 7.91 17 11.5C17 15.09 14.09 18 10.5 18Z"
+                            stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+
             <div id="alerta"></div>
 
             <select id="linea">
@@ -126,8 +168,6 @@
             <select id="estacion" disabled>
                 <option value="">Seleccione una estación</option>
             </select>
-
-            <button type="submit" style="display: none;"></button> <!-- importante para móvil -->
         </form>
 
         <div id="salida-seleccionada"></div>

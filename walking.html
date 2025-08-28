@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Prototipo Caminatas</title>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+	<style>
+		#map {
+			height: 100vh;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="map"></div>
+	<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+	<script>
+		const map = L.map('map').setView([-34.6037, -58.3816], 13); // Buenos Aires
+
+		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			maxZoom: 19,
+		}).addTo(map);
+
+		const recorrido = L.polyline([], { color: 'red' }).addTo(map);
+
+		// Guardar puntos en localStorage
+		const puntosGuardados = JSON.parse(localStorage.getItem("recorrido")) || [];
+		recorrido.setLatLngs(puntosGuardados);
+
+		// Geolocalización en tiempo real
+		if (navigator.geolocation) {
+			navigator.geolocation.watchPosition(pos => {
+				const lat = pos.coords.latitude;
+				const lng = pos.coords.longitude;
+
+				const nuevosPuntos = [...recorrido.getLatLngs(), [lat, lng]];
+				recorrido.setLatLngs(nuevosPuntos);
+
+				localStorage.setItem("recorrido", JSON.stringify(nuevosPuntos));
+			});
+		}
+	</script>
+</body>
+
+</html>

@@ -86,25 +86,24 @@ const updateMap = (highlightedExit = state.currentHighlightedExit, referencePoin
     }
 
     let lineColor = getColorLine(line);
+    const stationExits = getExitsByLineAndStation(line, station);
 
     // Mostrar las salidas del subte asociadas
-    geojsonDataExits.features.forEach(feature => {
-        if (feature.properties.estacion === station) {
-            let [lng, lat] = feature.geometry.coordinates;
-            let numeroSalida = feature.properties.numero_de_;
-            let calle = feature.properties.calle || 'Calle desconocida';
-            let altura = feature.properties.altura || '';
-            let destino = feature.properties.destino_bo && !feature.properties.destino_bo.includes('Salida') ? `<br>${feature.properties.destino_bo}` : '';
-            let escalera_m = feature.properties.escalera_m === 'True' ? '<br>Escalera mecánica' : '';
-            let observacion = feature.properties.observacio ? `<br>${feature.properties.observacio}` : '';
-            let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}${destino}${escalera_m}${observacion}`;
+    stationExits.forEach(feature => {
+        let [lng, lat] = feature.geometry.coordinates;
+        let numeroSalida = feature.properties.numero_de_;
+        let calle = feature.properties.calle || 'Calle desconocida';
+        let altura = feature.properties.altura || '';
+        let destino = feature.properties.destino_bo && !feature.properties.destino_bo.includes('Salida') ? `<br>${feature.properties.destino_bo}` : '';
+        let escalera_m = feature.properties.escalera_m === 'True' ? '<br>Escalera mecánica' : '';
+        let observacion = feature.properties.observacio ? `<br>${feature.properties.observacio}` : '';
+        let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}${destino}${escalera_m}${observacion}`;
 
-            const highlight = highlightedExit === feature;
-            const marker = createIcon(lat, lng, lineColor, popupContent, numeroSalida, feature.properties.escalera_m, state.bocasLayer, highlight);
+        const highlight = highlightedExit === feature;
+        const marker = createIcon(lat, lng, lineColor, popupContent, numeroSalida, feature.properties.escalera_m, state.bocasLayer, highlight);
 
-            if (highlight) {
-                marker.openPopup();
-            }
+        if (highlight) {
+            marker.openPopup();
         }
     });
 
@@ -126,6 +125,11 @@ const showAddressOnMap = point => {
 
     state.map.setView([point.lat, point.lon], 16);
 }
+
+const getExitsByLineAndStation = (line, station) => geojsonDataExits.features.filter(feature =>
+    feature.properties.linea === line &&
+    feature.properties.estacion === station
+);
 
 const geocodeAddress = async address => {
     const query = address.trim();
@@ -184,19 +188,24 @@ const selectNearbyStationAndExit = (point, line) => {
     }
 
     setStationSelectValue(nearbyStation.properties.ESTACION);
+    selectNearbyExitForStation(point, line, nearbyStation.properties.ESTACION);
+}
 
-    const exitsStation = geojsonDataExits.features.filter(feature =>
-        feature.properties.linea === line &&
-        feature.properties.estacion === nearbyStation.properties.ESTACION
-    );
-    const nearbyExit = searchNearbyBoca(point, exitsStation);
+const selectNearbyExitForStation = (point, line, station) => {
+    const stationExits = getExitsByLineAndStation(line, station);
+
+    if (!stationExits.length) {
+        state.currentHighlightedExit = null;
+        updateMap(null, point);
+        getSelectedExitDiv().innerHTML = 'No hay salidas cargadas para esta estación';
+        return;
+    }
+
+    const nearbyExit = searchNearbyBoca(point, stationExits);
 
     state.currentHighlightedExit = nearbyExit;
     updateMap(nearbyExit, point);
-
-    getSelectedExitDiv().innerHTML = nearbyExit
-        ? 'Salida sugerida: ' + nearbyExit.properties.numero_de_
-        : 'No hay salidas cargadas para esta estación';
+    getSelectedExitDiv().innerHTML = 'Salida sugerida: ' + nearbyExit.properties.numero_de_;
 }
 
 export const searchAddress = async address => {
@@ -257,11 +266,46 @@ const handleLineChange = async () => {
 
     if (!address || !line) {
         state.currentHighlightedExit = null;
-        getSelectedExit().innerHTML = '';
+        getSelectedExitDiv().innerHTML = '';
         return;
     }
 
     await selectByAddressAndLine(address, line);
+}
+
+const handleStationChange = async () => {
+    const address = getSearchValue();
+    const line = getLineSelectValue();
+    const station = getStationSelectValue();
+
+    if (!address) {
+        state.currentHighlightedExit = null;
+        updateMap();
+        getSelectedExitDiv().innerHTML = line && station && !getExitsByLineAndStation(line, station).length
+            ? 'No hay salidas cargadas para esta estación'
+            : '';
+        return;
+    }
+
+    const point = await geocodeAddress(address);
+
+    if (!point) {
+        getAlertDiv().innerHTML = 'Dirección no encontrada';
+        return;
+    }
+
+    if (getLineSelectValue() !== line || getStationSelectValue() !== station) return;
+
+    showAddressOnMap(point);
+
+    if (!line || !station) {
+        state.currentHighlightedExit = null;
+        updateMap(null, point);
+        return;
+    }
+
+    selectNearbyExitForStation(point, line, station);
+    getAlertDiv().innerHTML = '';
 }
 
 // Procesar datos del GeoJSON de estaciones
@@ -274,8 +318,5 @@ export const processData = () => {
     });
 
     getLineSelect().addEventListener('change', handleLineChange);
-    getStationSelect().addEventListener('change', () => {
-        state.currentHighlightedExit = null;
-        updateMap();
-    });
+    getStationSelect().addEventListener('change', handleStationChange);
 }

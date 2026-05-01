@@ -18,139 +18,21 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        #map {
-            height: 500px;
-            width: 100%;
-            margin-top: 10px;
-        }
 
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #222;
-            color: #fff;
-            text-align: center;
-            padding: 0 20px 20px 20px;
-        }
-
-        h2 {
-            margin: 10px;
-        }
-
-        .container {
-            max-width: 400px;
-            margin: auto;
-            padding: 20px;
-        }
-
-        .logo {
-            width: 70px;
-            margin-bottom: 5px;
-        }
-
-        h2 {
-            font-size: 24px;
-            color: #FFD700;
-        }
-
-        label {
-            display: block;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-
-        select,
-        #search {
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            border: 2px solid #FFD700;
-            border-radius: 8px;
-            background-color: #333;
-            color: #FFD700;
-            appearance: none;
-            outline: none;
-            transition: all 0.3s ease;
-            margin-bottom: 10px;
-        }
-
-        select {
-            cursor: pointer;
-        }
-
-        select:disabled {
-            border-color: #777;
-            color: #777;
-            cursor: not-allowed;
-        }
-
-        select:hover {
-            background-color: #444;
-        }
-
-        .escalera-icon {
-            font-size: 12px;
-            color: white;
-            margin-left: 3px;
-        }
-
-        #salida-seleccionada {
-            font-size: 16px;
-            color: #FFD700;
-        }
-
-        #alerta {
-            font-size: 12px;
-            color: red;
-            margin-bottom: 5px;
-        }
-
-        .busqueda-container {
-            width: 100%;
-        }
-
-        .input-lupa-wrapper {
-            position: relative;
-            width: 100%;
-        }
-
-        #botonBuscar {
-            position: absolute;
-            top: 50%;
-            right: 2px;
-            transform: translateY(-60%);
-            background: none;
-            border: none;
-            color: #FFD700;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 0;
-            align-items: center;
-        }
-
-        #botonBuscar:hover {
-            transform: translateY(-60%) scale(1.2);
-        }
-
-        .icon-lupa {
-            width: 20px;
-            height: 20px;
-            stroke: #FFD700;
-        }
-    </style>
+    <link rel="stylesheet" href="./css/style.css" />
 </head>
 
 <body>
 
     <div class="container">
-        <form id="formBusqueda" class="busqueda-container">
+        <form id="searchForm" class="search-container">
             <img src="img/logo.jpg" alt="Logo Subte" class="logo">
             <h2>¿Dónde salgo subte?</h2>
 
             <div class="input-lupa-wrapper">
                 <input id="search" type="text" placeholder="Buscar dirección..." />
-                <button type="submit" id="botonBuscar" aria-label="Buscar">
-                    <svg class="icon-lupa" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                <button type="submit" id="searchButton" aria-label="Buscar">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                         fill="none">
                         <path
                             d="M21 21L15.5 15.5M10.5 18C6.91 18 4 15.09 4 11.5C4 7.91 6.91 5 10.5 5C14.09 5 17 7.91 17 11.5C17 15.09 14.09 18 10.5 18Z"
@@ -159,266 +41,24 @@
                 </button>
             </div>
 
-            <div id="alerta"></div>
+            <div id="alert"></div>
 
-            <select id="linea">
+            <select id="line">
                 <option value="">Seleccione una línea</option>
             </select>
 
-            <select id="estacion" disabled>
+            <select id="station" disabled>
                 <option value="">Seleccione una estación</option>
             </select>
         </form>
 
-        <div id="salida-seleccionada"></div>
+        <div id="selected-exit"></div>
     </div>
 
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="js/estaciones-de-subte.js"></script>
-    <script src="js/bocas-de-subte.js"></script>
-    <script>
-        let map = L.map('map').setView([-34.6037, -58.3816], 12);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Variable para almacenar el círculo de la ubicación del usuario
-        let userCircle = null;
-        let showUbication = false;
-
-        // Función para rastrear la ubicación en tiempo real
-        function rastrearUbicacion() {
-            if ("geolocation" in navigator) {
-                navigator.geolocation.watchPosition(
-                    function (position) {
-                        let userLat = position.coords.latitude;
-                        let userLon = position.coords.longitude;
-                        let accuracy = position.coords.accuracy; // Precisión en metros
-
-                        // Si el círculo ya existe, actualizarlo
-                        if (userCircle) {
-                            userCircle.setLatLng([userLat, userLon]); // Mueve el círculo
-                            userCircle.setRadius(accuracy); // Ajusta el radio según la precisión
-                        } else {
-                            // Crear el círculo si no existe
-                            userCircle = L.circle([userLat, userLon], {
-                                color: '#007bff',  // Azul borde
-                                fillColor: '#007bff',  // Azul relleno
-                                fillOpacity: 0.3,  // Transparencia
-                                radius: accuracy  // Radio basado en la precisión del GPS
-                            }).addTo(map);
-                        }
-
-                        // Centrar el mapa en la nueva ubicación la primera vez
-                        if (!showUbication) {
-                            showUbication = true;
-                            map.setView([userLat, userLon], 15);
-                        }
-                    },
-                    function (error) {
-                        console.error("Error obteniendo ubicación:", error.message);
-                    },
-                    { enableHighAccuracy: true, maximumAge: 1000 }
-                );
-            } else {
-                console.error("Geolocalización no está soportada en este navegador.");
-            }
-        }
-
-        // Llamar a la función para iniciar el rastreo
-        //rastrearUbicacion();
-
-        let markerLayer = L.layerGroup().addTo(map);
-        let bocasLayer = L.layerGroup().addTo(map);
-        let estacionesData = {};
-
-        let formBusqueda = document.getElementById("formBusqueda");
-        let search = document.getElementById("search");
-        let lineaSelect = document.getElementById("linea");
-        let estacionSelect = document.getElementById("estacion");
-        let salidaSeleccionada = document.getElementById("salida-seleccionada");
-        let alerta = document.getElementById("alerta");
-
-        formBusqueda.addEventListener("submit", function (e) {
-            e.preventDefault();
-            const direccion = search.value;
-            buscarDireccion(direccion);
-        });
-
-        // Cargar líneas en el primer select
-        const lineasDisponibles = ["A", "B", "C", "D", "E", "H"];
-        lineasDisponibles.forEach(linea => {
-            let option = document.createElement("option");
-            option.value = linea;
-            option.textContent = `Línea ${linea}`;
-            option.style = `background-color: ${obtenerColorLinea(linea)}; color: #fff;`;
-            lineaSelect.appendChild(option);
-        });
-
-        // Procesar datos del GeoJSON de estaciones
-        function procesarDatos() {
-            estacionesData = {};
-            geojsonDataStations.features.forEach(feature => {
-                let { LINEA, ESTACION } = feature.properties;
-                if (!estacionesData[LINEA]) estacionesData[LINEA] = new Set();
-                estacionesData[LINEA].add(ESTACION);
-            });
-
-            lineaSelect.addEventListener("change", actualizarEstaciones);
-            estacionSelect.addEventListener("change", actualizarMapa);
-        }
-
-        function actualizarEstaciones() {
-            let lineaSeleccionada = document.getElementById("linea").value;
-            let estacionSelect = document.getElementById("estacion");
-            estacionSelect.innerHTML = '<option value="">Seleccione una estación</option>';
-            estacionSelect.disabled = !lineaSeleccionada;
-
-            if (lineaSeleccionada && estacionesData[lineaSeleccionada]) {
-                estacionesData[lineaSeleccionada].forEach(estacion => {
-                    let option = document.createElement("option");
-                    option.value = estacion;
-                    option.textContent = estacion;
-                    estacionSelect.appendChild(option);
-                });
-            }
-        }
-
-        function actualizarMapa() {
-            let linea = document.getElementById("linea").value;
-            let estacion = document.getElementById("estacion").value;
-            markerLayer.clearLayers();
-            bocasLayer.clearLayers();
-
-            if (!linea || !estacion) return;
-
-            // Mostrar la estación principal
-            let estacionSeleccionada = geojsonDataStations.features.find(f =>
-                f.properties.LINEA === linea && f.properties.ESTACION === estacion
-            );
-
-            if (estacionSeleccionada) {
-                let coords = estacionSeleccionada.geometry.coordinates.reverse(); // Leaflet usa [lat, lng]
-                //let marker = L.marker(coords).bindPopup(`<b>${estacion}</b><br>Línea ${linea}`);
-                //markerLayer.addLayer(marker);
-                map.setView(coords, 50);
-            }
-
-            let colorLinea = obtenerColorLinea(linea);
-
-            // Mostrar las salidas del subte asociadas
-            geojsonDataExits.features.forEach(feature => {
-                if (feature.properties.estacion === estacion) {
-                    let [lng, lat] = feature.geometry.coordinates;
-                    let numeroSalida = feature.properties.numero_de_;
-                    let calle = feature.properties.calle || "Calle desconocida";
-                    let altura = feature.properties.altura || "";
-                    let destino = feature.properties.destino_bo && !feature.properties.destino_bo.includes('Salida') ? `<br>${feature.properties.destino_bo}` : "";
-                    let escalera_m = feature.properties.escalera_m === "True" ? "<br>Escalera mecánica" : "";
-                    let observacion = feature.properties.observacio ? `<br>${feature.properties.observacio}` : "";
-                    let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}${destino}${escalera_m}${observacion}`;
-
-                    crearIcono(lat, lng, colorLinea, popupContent, numeroSalida, feature.properties.escalera_m, bocasLayer);
-                }
-            });
-        }
-
-        async function buscarDireccion(direccion) {
-            let marker;
-
-            const query = direccion;
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-
-            const response = await fetch(url, {
-                headers: {
-                    'User-Agent': 'TuApp/1.0'
-                }
-            });
-            const results = await response.json();
-
-            if (results.length > 0) {
-                const result = results[0];
-                const lat = result.lat;
-                const lon = result.lon;
-
-                if (marker) map.removeLayer(marker);
-
-                marker = L.marker([lat, lon]).addTo(map);
-                map.setView([lat, lon], 16);
-
-                // Buscar boca de subte más cercana
-                let distanciaMinima = Infinity;
-                let bocaCercana = null;
-
-                const bocasSubte = geojsonDataExits.features;
-
-                bocasSubte.forEach(boca => {
-                    const [lonSubte, latSubte] = boca.geometry.coordinates;
-                    const distancia = map.distance([lat, lon], [latSubte, lonSubte]);
-                    if (distancia < distanciaMinima) {
-                        distanciaMinima = distancia;
-                        bocaCercana = boca;
-                    }
-                });
-
-                if (bocaCercana && bocaCercana.properties) {
-                    console.log(bocaCercana);
-
-
-                    lineaSelect.value = bocaCercana.properties.linea;
-                    lineaSelect.dispatchEvent(new Event("change"));
-
-                    estacionSelect.value = bocaCercana.properties.estacion;
-                    estacionSelect.dispatchEvent(new Event("change"));
-
-                    salidaSeleccionada.innerHTML = "Salida sugerida: " + bocaCercana.properties.numero_de_;
-                }
-
-                alerta.innerHTML = '';
-            } else {
-                alerta.innerHTML = 'Dirección no encontrada';
-            }
-        }
-
-        // Función para crear iconos de diferentes colores
-        function crearIcono(lat, lng, color, textoPopup, numero, escaleraMecanica, layer) {
-            // Si la salida tiene escalera mecánica, agregar un ícono
-            let iconoEscalera = escaleraMecanica === "True"
-                ? '<i class="material-icons escalera-icon">escalator</i>'
-                : '';
-
-            // Crear un icono con el número dentro de un círculo
-            let iconoSalida = L.divIcon({
-                className: 'icono-salida',
-                html: `<div class="salida" style="background-color:${color}"><b>${numero}${iconoEscalera}</b></div>`,
-                iconSize: [24, 24], // Tamaño del icono
-                iconAnchor: [12, 12] // Centro del icono
-            });
-
-            // Crear el marcador con el icono y el popup
-            let marker = L.marker([lat, lng], { icon: iconoSalida }).bindPopup(textoPopup);
-
-            // Agregar al layer correspondiente
-            layer.addLayer(marker);
-        }
-
-        function obtenerColorLinea(linea) {
-            const colores = {
-                "A": "#1E88E5", // Azul fuerte
-                "B": "#D32F2F", // Rojo oscuro (más visible que rojo puro)
-                "C": "#303F9F", // Azul profundo
-                "D": "#388E3C", // Verde fuerte con más azul
-                "E": "#8E24AA", // Púrpura más vibrante (en vez de violeta oscuro)
-                "H": "#FFC107"  // Amarillo anaranjado (para mayor visibilidad)
-            };
-            return colores[linea] || "gray"; // Si no se encuentra, usa gris por defecto
-        }
-
-        procesarDatos();
-    </script>
+    <script src="js/index.js" type="module"></script>
 
 </body>
 

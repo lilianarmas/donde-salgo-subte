@@ -1,4 +1,4 @@
-const geojsonDataStations = // 20250324135632
+export const geojsonDataStations = // 20250324135632
 // https://cdn.buenosaires.gob.ar/datosabiertos/datasets/sbase/subte-estaciones/estaciones-de-subte.geojson
 
 {

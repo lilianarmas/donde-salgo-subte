@@ -6,31 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>¿Dónde salgo subte?</title>
 
-    <!-- Favicon estándar -->
     <link rel="shortcut icon" sizes="16x16" href="img/favicon-16x16.ico">
     <link rel="shortcut icon" sizes="32x32" href="img/favicon-32x32.ico">
     <link rel="shortcut icon" sizes="64x64" href="img/favicon-64x64.ico">
 
-    <!-- Para Android y Chrome (favicon en alta resolución) -->
     <link rel="icon" type="image/png" sizes="192x192" href="/img/favicon.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/img/favicon.png">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
     <link rel="stylesheet" href="./css/styles.css" />
 </head>
 
 <body>
-
-    <div class="container">
+    <main class="app-shell">
         <form id="searchForm" class="search-container">
             <img src="img/logo.jpg" alt="Logo Subte" class="logo">
-            <h2>¿Dónde salgo subte?</h2>
+            <h1>¿Dónde salgo subte?</h1>
 
             <div class="input-lupa-wrapper">
-                <input id="search" type="text" placeholder="Buscar dirección..." />
+                <input id="search" type="text" placeholder="Av Corrientes 1200" />
                 <button type="submit" id="searchButton" aria-label="Buscar">
                     <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                         fill="none">
@@ -43,23 +38,64 @@
 
             <div id="alert"></div>
 
-            <select id="line">
+            <div class="field-group">
+                <label for="line">Línea</label>
+                <div id="lineButtons" class="line-buttons" aria-label="Seleccionar línea"></div>
+            </div>
+
+            <select id="line" class="visually-hidden" aria-hidden="true" tabindex="-1">
                 <option value="">Seleccione una línea</option>
             </select>
 
-            <select id="station" disabled>
-                <option value="">Seleccione una estación</option>
-            </select>
+            <div class="field-group">
+                <label for="station">Estación</label>
+                <div class="select-wrapper">
+                    <select id="station" disabled>
+                        <option value="">Seleccione una estación</option>
+                    </select>
+                    <span class="material-icons select-icon" aria-hidden="true">expand_more</span>
+                </div>
+            </div>
+
+            <section class="accessibility-panel" aria-labelledby="accessibilityTitle">
+                <div class="panel-title">
+                    <h2 id="accessibilityTitle">Filtros de accesibilidad</h2>
+                    <span class="material-icons info-icon" aria-hidden="true">info</span>
+                </div>
+
+                <label class="filter-row">
+                    <span class="material-icons filter-icon" aria-hidden="true">escalator</span>
+                    <span class="filter-copy">
+                        <span class="filter-title">Escaleras mecánicas</span>
+                        <span class="filter-description">Solo mostrar salidas que tengan escaleras mecánicas</span>
+                    </span>
+                    <input type="checkbox" class="switch-input" aria-label="Escaleras mecánicas">
+                    <span class="switch" aria-hidden="true"></span>
+                </label>
+
+                <label class="filter-row">
+                    <span class="material-icons filter-icon" aria-hidden="true">elevator</span>
+                    <span class="filter-copy">
+                        <span class="filter-title">Ascensor</span>
+                        <span class="filter-description">Solo mostrar salidas que tengan ascensor</span>
+                    </span>
+                    <input type="checkbox" class="switch-input" aria-label="Ascensor">
+                    <span class="switch" aria-hidden="true"></span>
+                </label>
+            </section>
+
+            <button type="submit" class="cta-button">
+                <span class="material-icons" aria-hidden="true">my_location</span>
+                Buscar salida más cercana
+            </button>
         </form>
 
         <div id="selected-exit"></div>
-    </div>
-
-    <div id="map"></div>
+        <div id="map"></div>
+    </main>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/index.js" type="module"></script>
-
 </body>
 
 </html>

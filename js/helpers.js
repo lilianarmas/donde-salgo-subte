@@ -7,6 +7,7 @@ import {
     getAlertDiv,
     getSearchValue,
     getSelectedLineValue,
+    isLineManuallySelected,
     setSelectedLineValue,
     getStationSelectValue,
     setStationSelectValue,
@@ -300,7 +301,7 @@ export const searchAddress = async address => {
 
     const line = getSelectedLineValue();
 
-    if (line) {
+    if (line && isLineManuallySelected()) {
         selectNearbyStationAndExit(point, line);
         getAlertDiv().innerHTML = '';
         return;
@@ -421,13 +422,13 @@ const handleFiltersChange = async () => {
 
     showAddressOnMap(point);
 
-    if (line && station) {
+    if (line && station && isLineManuallySelected()) {
         selectNearbyExitForStation(point, line, station);
         getAlertDiv().innerHTML = '';
         return;
     }
 
-    if (line) {
+    if (line && isLineManuallySelected()) {
         selectNearbyStationAndExit(point, line);
         getAlertDiv().innerHTML = '';
         return;
@@ -449,7 +450,10 @@ export const processData = () => {
         const lineButton = event.target.closest('.line-button');
         if (!lineButton) return;
 
-        setSelectedLineValue(lineButton.dataset.line);
+        const line = lineButton.dataset.line;
+        const shouldReturnToAutomatic = isLineManuallySelected() && getSelectedLineValue() === line;
+
+        setSelectedLineValue(shouldReturnToAutomatic ? '' : line, !shouldReturnToAutomatic);
         handleLineChange();
     });
     getStationSelect().addEventListener('change', handleStationChange);

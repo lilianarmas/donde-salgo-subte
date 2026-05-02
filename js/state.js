@@ -2,6 +2,7 @@ export const state = {
     map: null,
     stationsData: {},
     selectedLine: '',
+    isLineManuallySelected: false,
     filters: {
         escalator: false,
         elevator: false

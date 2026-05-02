@@ -13,6 +13,7 @@ export const getSearchValue = () => getSearchInput().value.trim();
 export const setSearchValue = value => { getSearchInput().value = value; };
 
 export const getSelectedLineValue = () => state.selectedLine;
+export const isLineManuallySelected = () => state.isLineManuallySelected;
 export const setLineButtonsActive = line => {
     getLineButtonsContainer().querySelectorAll('.line-button').forEach(button => {
         const isActive = button.dataset.line === line;
@@ -21,8 +22,9 @@ export const setLineButtonsActive = line => {
     });
 };
 
-export const setSelectedLineValue = line => {
+export const setSelectedLineValue = (line, isManual = false) => {
     state.selectedLine = line;
+    state.isLineManuallySelected = isManual;
     setLineButtonsActive(line);
 };
 

@@ -340,7 +340,7 @@ select:disabled {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.stairs-icon {
+.accessibility-icon {
     margin-left: 2px;
     color: white;
     font-size: 11px;

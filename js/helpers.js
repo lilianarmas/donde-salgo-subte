@@ -47,17 +47,25 @@ const updateStations = () => {
 }
 
 // Función para crear iconos de diferentes colores
-const createIcon = (lat, lng, color, popupText, number, escalator, layer, highlight = false) => {
-    // Si la salida tiene escalera mecánica, agregar un ícono
-    let stairsIcon = escalator === 'True'
-        ? '<i class="material-icons stairs-icon">escalator</i>'
-        : '';
+const createIcon = (lat, lng, color, popupText, number, accessibility, layer, highlight = false) => {
+    let accessibilityIcon = '';
+
+    if (accessibility.escalator === 'True') {
+        accessibilityIcon = '<i class="material-icons accessibility-icon">escalator</i>';
+    } else
+    if (accessibility.elevator === 'True') {
+        accessibilityIcon = '<i class="material-icons accessibility-icon">elevator</i>';
+    } else
+    if (accessibility.ramp === 'True') {
+        accessibilityIcon = '<i class="material-icons accessibility-icon">accessible</i>';
+    }
+
     let highlightedStyle = highlight ? 'border: 3px solid #fff; box-shadow: 0 0 12px #FFD700; transform: scale(1.25);' : '';
 
     // Crear un icono con el número dentro de un círculo
     let exitIcon = L.divIcon({
         className: 'icon-exit',
-        html: `<div class='exit' style='background-color:${color}; ${highlightedStyle}'><b>${number}${stairsIcon}</b></div>`,
+        html: `<div class='exit' style='background-color:${color}; ${highlightedStyle}'><b>${number}${accessibilityIcon}</b></div>`,
         iconSize: [24, 24], // Tamaño del icono
         iconAnchor: [12, 12] // Centro del icono
     });
@@ -99,12 +107,25 @@ const updateMap = (highlightedExit = state.currentHighlightedExit, referencePoin
         let calle = feature.properties.calle || 'Calle desconocida';
         let altura = feature.properties.altura || '';
         let destino = feature.properties.destino_bo && !feature.properties.destino_bo.includes('Salida') ? `<br>${feature.properties.destino_bo}` : '';
-        let escalera_m = feature.properties.escalera_m === 'True' ? '<br>Escalera mecánica' : '';
+
+        let accessibility = { escalator: feature.properties.escalera_m, elevator: feature.properties.ascensor, ramp: feature.properties.rampa };
+        let accessibilityInfo = '';
+
+        if (accessibility.escalator === 'True') {
+            accessibilityInfo += '<br>Escalera mecánica';
+        }
+        if (accessibility.elevator === 'True') {
+            accessibilityInfo += '<br>Ascensor';
+        }
+        if (accessibility.ramp === 'True') {
+            accessibilityInfo += '<br>Rampa';
+        }
+
         let observacion = feature.properties.observacio ? `<br>${feature.properties.observacio}` : '';
-        let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}${destino}${escalera_m}${observacion}`;
+        let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}${destino}${accessibilityInfo}${observacion}`;
 
         const highlight = highlightedExit === feature;
-        const marker = createIcon(lat, lng, lineColor, popupContent, numeroSalida, feature.properties.escalera_m, state.bocasLayer, highlight);
+        const marker = createIcon(lat, lng, lineColor, popupContent, numeroSalida, accessibility, state.bocasLayer, highlight);
 
         if (highlight) {
             marker.openPopup();

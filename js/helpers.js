@@ -9,7 +9,11 @@ import {
     getSelectedLineValue,
     setSelectedLineValue,
     getStationSelectValue,
-    setStationSelectValue
+    setStationSelectValue,
+    getEscalatorFilterInput,
+    getElevatorFilterInput,
+    getAccessibilityFilters,
+    setAccessibilityFilters
 } from './ui.js';
 import { state } from './state.js';
 
@@ -131,6 +135,29 @@ const getExitsByLineAndStation = (line, station) => geojsonDataExits.features.fi
     feature.properties.estacion === station
 );
 
+const getExitsByLine = line => geojsonDataExits.features.filter(feature =>
+    feature.properties.linea === line
+);
+
+const hasActiveFilters = () => state.filters.escalator || state.filters.elevator;
+
+const matchesAccessibilityFilters = feature => {
+    if (state.filters.escalator && feature.properties.escalera_m !== 'True') return false;
+    if (state.filters.elevator && feature.properties.ascensor !== 'True') return false;
+    return true;
+}
+
+const filterExitsByAccessibility = features => features.filter(matchesAccessibilityFilters);
+
+const getNoFilteredExitsMessage = () => {
+    if (!hasActiveFilters()) return 'No hay salidas cargadas para esta estación';
+    if (state.filters.escalator && state.filters.elevator) {
+        return 'No hay salidas con escaleras mecánicas y ascensor para esta selección';
+    }
+    if (state.filters.escalator) return 'No hay salidas con escaleras mecánicas para esta selección';
+    return 'No hay salidas con ascensor para esta selección';
+}
+
 const geocodeAddress = async address => {
     const query = address.trim();
 
@@ -177,6 +204,11 @@ const searchNearbyBoca = (point, features) => {
 }
 
 const selectNearbyStationAndExit = (point, line) => {
+    if (hasActiveFilters()) {
+        selectNearbyExitForLine(point, line);
+        return;
+    }
+
     const lineStations = geojsonDataStations.features.filter(feature =>
         feature.properties.LINEA === line
     );
@@ -191,8 +223,28 @@ const selectNearbyStationAndExit = (point, line) => {
     selectNearbyExitForStation(point, line, nearbyStation.properties.ESTACION);
 }
 
+const selectNearbyExitForLine = (point, line) => {
+    const lineExits = getExitsByLine(line);
+    const filteredExits = filterExitsByAccessibility(lineExits);
+
+    if (!filteredExits.length) {
+        state.currentHighlightedExit = null;
+        updateMap(null, point);
+        getSelectedExitDiv().innerHTML = getNoFilteredExitsMessage();
+        return;
+    }
+
+    const nearbyExit = searchNearbyBoca(point, filteredExits);
+
+    setStationSelectValue(nearbyExit.properties.estacion);
+    state.currentHighlightedExit = nearbyExit;
+    updateMap(nearbyExit, point);
+    getSelectedExitDiv().innerHTML = 'Salida sugerida: ' + nearbyExit.properties.numero_de_;
+}
+
 const selectNearbyExitForStation = (point, line, station) => {
     const stationExits = getExitsByLineAndStation(line, station);
+    const filteredExits = filterExitsByAccessibility(stationExits);
 
     if (!stationExits.length) {
         state.currentHighlightedExit = null;
@@ -201,7 +253,14 @@ const selectNearbyExitForStation = (point, line, station) => {
         return;
     }
 
-    const nearbyExit = searchNearbyBoca(point, stationExits);
+    if (!filteredExits.length) {
+        state.currentHighlightedExit = null;
+        updateMap(null, point);
+        getSelectedExitDiv().innerHTML = getNoFilteredExitsMessage();
+        return;
+    }
+
+    const nearbyExit = searchNearbyBoca(point, filteredExits);
 
     state.currentHighlightedExit = nearbyExit;
     updateMap(nearbyExit, point);
@@ -227,7 +286,17 @@ export const searchAddress = async address => {
     }
 
     // Si no hay línea elegida, mantener el comportamiento previo: buscar la salida más cercana en toda la red.
-    const nearbyBoca = searchNearbyBoca(point, geojsonDataExits.features);
+    const filteredExits = filterExitsByAccessibility(geojsonDataExits.features);
+
+    if (!filteredExits.length) {
+        state.currentHighlightedExit = null;
+        updateMap(null, point);
+        getSelectedExitDiv().innerHTML = getNoFilteredExitsMessage();
+        getAlertDiv().innerHTML = '';
+        return;
+    }
+
+    const nearbyBoca = searchNearbyBoca(point, filteredExits);
 
     if (nearbyBoca && nearbyBoca.properties) {
         setSelectedLineValue(nearbyBoca.properties.linea);
@@ -308,6 +377,44 @@ const handleStationChange = async () => {
     getAlertDiv().innerHTML = '';
 }
 
+const handleFiltersChange = async () => {
+    setAccessibilityFilters(getAccessibilityFilters());
+
+    const address = getSearchValue();
+    const line = getSelectedLineValue();
+    const station = getStationSelectValue();
+
+    if (!address) {
+        state.currentHighlightedExit = null;
+        updateMap();
+        getSelectedExitDiv().innerHTML = '';
+        return;
+    }
+
+    const point = await geocodeAddress(address);
+
+    if (!point) {
+        getAlertDiv().innerHTML = 'DirecciÃ³n no encontrada';
+        return;
+    }
+
+    showAddressOnMap(point);
+
+    if (line && station) {
+        selectNearbyExitForStation(point, line, station);
+        getAlertDiv().innerHTML = '';
+        return;
+    }
+
+    if (line) {
+        selectNearbyStationAndExit(point, line);
+        getAlertDiv().innerHTML = '';
+        return;
+    }
+
+    searchAddress(address);
+}
+
 // Procesar datos del GeoJSON de estaciones
 export const processData = () => {
     state.stationsData = {};
@@ -325,4 +432,6 @@ export const processData = () => {
         handleLineChange();
     });
     getStationSelect().addEventListener('change', handleStationChange);
+    getEscalatorFilterInput().addEventListener('change', handleFiltersChange);
+    getElevatorFilterInput().addEventListener('change', handleFiltersChange);
 }

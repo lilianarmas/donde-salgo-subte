@@ -1,13 +1,13 @@
 import { geojsonDataExits } from '../data/bocas-de-subte.js';
 import { geojsonDataStations } from '../data/estaciones-de-subte.js';
 import {
-    getLineSelect,
+    getLineButtonsContainer,
     getStationSelect,
     getSelectedExitDiv,
     getAlertDiv,
     getSearchValue,
-    getLineSelectValue,
-    setLineSelectValue,
+    getSelectedLineValue,
+    setSelectedLineValue,
     getStationSelectValue,
     setStationSelectValue
 } from './ui.js';
@@ -27,7 +27,7 @@ export const getColorLine = line => {
 }
 
 const updateStations = () => {
-    let lineSelected = getLineSelectValue();
+    let lineSelected = getSelectedLineValue();
     let stationSelect = getStationSelect();
     stationSelect.innerHTML = '<option value="">Seleccione una estación</option>';
     stationSelect.disabled = !lineSelected;
@@ -67,7 +67,7 @@ const createIcon = (lat, lng, color, popupText, number, escalator, layer, highli
 }
 
 const updateMap = (highlightedExit = state.currentHighlightedExit, referencePoint = null) => {
-    let line = getLineSelectValue();
+    let line = getSelectedLineValue();
     let station = getStationSelectValue();
     state.markerLayer.clearLayers();
     state.bocasLayer.clearLayers();
@@ -218,7 +218,7 @@ export const searchAddress = async address => {
 
     showAddressOnMap(point);
 
-    const line = getLineSelectValue();
+    const line = getSelectedLineValue();
 
     if (line) {
         selectNearbyStationAndExit(point, line);
@@ -230,7 +230,7 @@ export const searchAddress = async address => {
     const nearbyBoca = searchNearbyBoca(point, geojsonDataExits.features);
 
     if (nearbyBoca && nearbyBoca.properties) {
-        setLineSelectValue(nearbyBoca.properties.linea);
+        setSelectedLineValue(nearbyBoca.properties.linea);
         updateStations();
 
         setStationSelectValue(nearbyBoca.properties.estacion);
@@ -251,7 +251,7 @@ const selectByAddressAndLine = async (address, line) => {
         return;
     }
 
-    if (getLineSelectValue() !== line) return;
+    if (getSelectedLineValue() !== line) return;
 
     showAddressOnMap(point);
     selectNearbyStationAndExit(point, line);
@@ -262,7 +262,7 @@ const handleLineChange = async () => {
     updateStations();
 
     const address = getSearchValue();
-    const line = getLineSelectValue();
+    const line = getSelectedLineValue();
 
     if (!address || !line) {
         state.currentHighlightedExit = null;
@@ -275,7 +275,7 @@ const handleLineChange = async () => {
 
 const handleStationChange = async () => {
     const address = getSearchValue();
-    const line = getLineSelectValue();
+    const line = getSelectedLineValue();
     const station = getStationSelectValue();
 
     if (!address) {
@@ -294,7 +294,7 @@ const handleStationChange = async () => {
         return;
     }
 
-    if (getLineSelectValue() !== line || getStationSelectValue() !== station) return;
+    if (getSelectedLineValue() !== line || getStationSelectValue() !== station) return;
 
     showAddressOnMap(point);
 
@@ -317,6 +317,12 @@ export const processData = () => {
         state.stationsData[LINEA].add(ESTACION);
     });
 
-    getLineSelect().addEventListener('change', handleLineChange);
+    getLineButtonsContainer().addEventListener('click', event => {
+        const lineButton = event.target.closest('.line-button');
+        if (!lineButton) return;
+
+        setSelectedLineValue(lineButton.dataset.line);
+        handleLineChange();
+    });
     getStationSelect().addEventListener('change', handleStationChange);
 }

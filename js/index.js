@@ -6,9 +6,7 @@ import {
 import {
     getSearchForm,
     getSearchValue,
-    getLineSelect,
-    getLineButtonsContainer,
-    setLineButtonsActive
+    getLineButtonsContainer
 } from './ui.js';
 import { state } from './state.js';
 
@@ -27,15 +25,9 @@ getSearchForm().addEventListener('submit', function (e) {
     searchAddress(address);
 });
 
-// Cargar líneas en el select oculto y en los botones visibles.
+// Cargar líneas en los botones visibles.
 const availableLines = ['A', 'B', 'C', 'D', 'E', 'H'];
 availableLines.forEach(line => {
-    const option = document.createElement('option');
-    option.value = line;
-    option.textContent = `Línea ${line}`;
-    option.style = `background-color: ${getColorLine(line)}; color: #fff;`;
-    getLineSelect().appendChild(option);
-
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'line-button';
@@ -43,11 +35,6 @@ availableLines.forEach(line => {
     button.textContent = line;
     button.setAttribute('aria-pressed', 'false');
     button.style.backgroundColor = getColorLine(line);
-    button.addEventListener('click', () => {
-        getLineSelect().value = line;
-        setLineButtonsActive(line);
-        getLineSelect().dispatchEvent(new Event('change'));
-    });
     getLineButtonsContainer().appendChild(button);
 });
 

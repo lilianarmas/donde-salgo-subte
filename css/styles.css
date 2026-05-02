@@ -128,7 +128,8 @@ select:focus {
     margin-bottom: 22px;
 }
 
-label {
+label,
+.field-label {
     display: block;
     margin-bottom: 12px;
     font-size: 22px;
@@ -343,17 +344,6 @@ select:disabled {
     margin-left: 2px;
     color: white;
     font-size: 11px;
-}
-
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
-    padding: 0;
 }
 
 @media (min-width: 480px) {

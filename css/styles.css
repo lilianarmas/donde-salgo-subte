@@ -1,9 +1,8 @@
 :root {
     --yellow: #ffd21a;
     --yellow-strong: #f4c400;
-    --bg: #111;
-    --panel: rgba(22, 22, 22, 0.82);
-    --panel-border: rgba(255, 255, 255, 0.45);
+    --panel: rgba(18, 18, 18, 0.86);
+    --panel-border: rgba(255, 255, 255, 0.32);
     --muted: #b8b8b8;
     --text: #f7f7f7;
 }
@@ -15,13 +14,13 @@
 body {
     min-height: 100vh;
     margin: 0;
-    padding: 18px 16px 28px;
+    padding: 14px;
     font-family: Arial, sans-serif;
     color: var(--text);
     background:
         radial-gradient(circle at 50% 8%, rgba(255, 210, 26, 0.08), transparent 28%),
-        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.06), transparent 34%),
-        linear-gradient(180deg, #181818 0%, #0c0c0c 100%);
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05), transparent 34%),
+        linear-gradient(180deg, #181818 0%, #0b0b0b 100%);
 }
 
 .app-shell {
@@ -33,11 +32,17 @@ body {
     width: 100%;
 }
 
+.brand-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
 .logo {
-    display: block;
-    width: 118px;
-    height: 118px;
-    margin: 4px auto 12px;
+    width: 58px;
+    height: 58px;
+    flex: 0 0 auto;
     border-radius: 50%;
     object-fit: cover;
 }
@@ -48,53 +53,51 @@ h2 {
 }
 
 h1 {
-    margin-bottom: 28px;
     color: var(--yellow);
-    font-size: 34px;
-    line-height: 1.08;
-    text-align: center;
+    font-size: 22px;
+    line-height: 1.1;
 }
 
 .input-lupa-wrapper {
     position: relative;
     width: 100%;
-    margin-bottom: 22px;
+    margin-bottom: 14px;
 }
 
 #search,
 select {
     width: 100%;
-    min-height: 58px;
-    border: 2px solid var(--yellow);
-    border-radius: 8px;
+    min-height: 44px;
+    border: 1px solid var(--yellow);
+    border-radius: 5px;
     outline: none;
     color: var(--text);
-    background-color: rgba(17, 17, 17, 0.76);
-    font-size: 22px;
+    background-color: rgba(12, 12, 12, 0.78);
+    font-size: 16px;
     transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 #search {
-    padding: 0 58px 0 18px;
+    padding: 0 48px 0 14px;
 }
 
 #search::placeholder {
     color: var(--text);
-    opacity: 0.96;
+    opacity: 0.3;
 }
 
 #search:focus,
 select:focus {
-    box-shadow: 0 0 0 3px rgba(255, 210, 26, 0.22);
+    box-shadow: 0 0 0 3px rgba(255, 210, 26, 0.18);
 }
 
 #searchButton {
     position: absolute;
     top: 50%;
-    right: 14px;
+    right: 8px;
     display: inline-flex;
-    width: 42px;
-    height: 42px;
+    width: 38px;
+    height: 38px;
     align-items: center;
     justify-content: center;
     padding: 0;
@@ -111,46 +114,58 @@ select:focus {
 }
 
 .search-icon {
-    width: 34px;
-    height: 34px;
+    width: 27px;
+    height: 27px;
     stroke: currentColor;
 }
 
 #alert {
-    min-height: 18px;
-    margin: -12px 0 8px;
-    color: #ff6f6f;
+    min-height: 16px;
+    margin: -6px 0 8px;
+    color: #ff7777;
     font-size: 13px;
-    text-align: left;
+    text-align: center;
+    width: 100%;
+}
+
+.controls-row {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
 .field-group {
-    margin-bottom: 22px;
+    min-width: 0;
 }
 
 label,
 .field-label {
     display: block;
-    margin-bottom: 12px;
-    font-size: 22px;
+    margin-bottom: 7px;
+    font-size: 16px;
     font-weight: 700;
 }
 
 .line-buttons {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+    display: flex;
+    gap: 9px;
+    width: 100%;
+    overflow-x: auto;
+    padding: 1px 1px 8px;
+    scrollbar-width: thin;
 }
 
 .line-button {
-    min-height: 58px;
+    width: 52px;
+    min-width: 52px;
+    min-height: 38px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 5px;
     color: #fff;
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: inset 0 -12px 18px rgba(0, 0, 0, 0.16);
+    box-shadow: inset 0 -10px 16px rgba(0, 0, 0, 0.16);
     transition: transform 0.18s ease, box-shadow 0.18s ease, outline-color 0.18s ease;
 }
 
@@ -160,9 +175,9 @@ label,
 }
 
 .line-button.is-active {
-    outline: 4px solid var(--yellow);
-    outline-offset: -3px;
-    box-shadow: 0 0 0 2px rgba(255, 210, 26, 0.28), inset 0 -12px 18px rgba(0, 0, 0, 0.14);
+    outline: 3px solid var(--yellow);
+    outline-offset: -2px;
+    box-shadow: 0 0 0 2px rgba(255, 210, 26, 0.22), inset 0 -10px 16px rgba(0, 0, 0, 0.14);
 }
 
 .select-wrapper {
@@ -170,13 +185,13 @@ label,
 }
 
 select {
-    padding: 0 58px 0 18px;
+    padding: 0 44px 0 13px;
     appearance: none;
     cursor: pointer;
 }
 
 select:disabled {
-    border-color: rgba(255, 255, 255, 0.34);
+    border-color: rgba(255, 255, 255, 0.3);
     color: #777;
     cursor: not-allowed;
 }
@@ -184,75 +199,77 @@ select:disabled {
 .select-icon {
     position: absolute;
     top: 50%;
-    right: 18px;
+    right: 11px;
     color: var(--yellow);
-    font-size: 34px;
+    font-size: 28px;
     pointer-events: none;
     transform: translateY(-50%);
 }
 
 .accessibility-panel {
-    margin: 2px 0 22px;
-    padding: 20px 16px;
-    border: 1px solid var(--panel-border);
-    border-radius: 8px;
-    background: var(--panel);
+    min-width: 0;
 }
 
 .panel-title {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
+    gap: 8px;
+    margin-bottom: 7px;
 }
 
 .panel-title h2 {
-    color: var(--yellow);
-    font-size: 22px;
+    color: var(--text);
+    font-size: 16px;
     line-height: 1.2;
 }
 
 .info-icon {
     color: rgba(255, 255, 255, 0.48);
-    font-size: 24px;
+    font-size: 18px;
+}
+
+.filters-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
 }
 
 .filter-row {
     display: grid;
-    grid-template-columns: 56px minmax(0, 1fr) 70px;
-    gap: 12px;
+    grid-template-columns: 30px minmax(60px, 1fr);
+    grid-template-rows: auto 28px;
+    gap: 5px 8px;
     align-items: center;
+    min-width: 112px;
     margin: 0;
-    padding: 18px 0;
-}
-
-.filter-row + .filter-row {
-    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    padding: 10px;
+    border: 1px solid var(--panel-border);
+    border-radius: 5px;
+    background: var(--panel);
 }
 
 .filter-icon {
+    grid-row: 1 / 3;
     color: var(--yellow);
-    font-size: 42px;
+    font-size: 30px;
 }
 
 .filter-copy {
-    display: grid;
-    gap: 3px;
+    display: block;
     min-width: 0;
     text-align: left;
 }
 
 .filter-title {
-    font-size: 19px;
+    display: block;
+    font-size: 13px;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.1;
 }
 
 .filter-description {
-    color: var(--muted);
-    font-size: 17px;
-    font-weight: 400;
-    line-height: 1.35;
+    display: none;
 }
 
 .switch-input {
@@ -263,9 +280,8 @@ select:disabled {
 
 .switch {
     position: relative;
-    width: 58px;
-    height: 32px;
-    justify-self: end;
+    width: 44px;
+    height: 24px;
     border-radius: 999px;
     background: var(--yellow);
     box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.12);
@@ -274,9 +290,9 @@ select:disabled {
 .switch::after {
     position: absolute;
     top: 3px;
-    left: 29px;
-    width: 26px;
-    height: 26px;
+    left: 23px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background: #fff;
     content: '';
@@ -291,41 +307,40 @@ select:disabled {
     left: 3px;
 }
 
-.cta-button {
-    display: inline-flex;
+.map-shell {
+    position: relative;
     width: 100%;
-    min-height: 58px;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 24px;
-    border: 0;
-    border-radius: 8px;
-    color: #111;
-    background: linear-gradient(180deg, #ffdb24 0%, #f8c900 100%);
-    font-size: 20px;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-.cta-button:hover,
-.cta-button:focus-visible {
-    filter: brightness(1.04);
 }
 
 #selected-exit {
-    min-height: 34px;
-    margin-bottom: 12px;
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    z-index: 500;
+    width: min(calc(100% - 28px), 380px);
+    min-height: 42px;
+    padding: 10px 14px;
+    border: 1px solid var(--panel-border);
+    border-radius: 5px;
     color: var(--yellow);
-    font-size: 24px;
+    background: rgba(14, 14, 14, 0.82);
+    font-size: 18px;
+    font-weight: 800;
     text-align: center;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+#selected-exit:empty {
+    display: none;
 }
 
 #map {
     width: 100%;
-    height: 470px;
+    height: min(58vh, 520px);
+    min-height: 360px;
     overflow: hidden;
-    border-radius: 4px;
+    border-radius: 5px;
 }
 
 .exit {
@@ -346,12 +361,91 @@ select:disabled {
     font-size: 11px;
 }
 
-@media (min-width: 480px) {
+.accessibility-icon-info {
+    font-size: 13px;
+}
+
+@media (min-width: 900px) {
     body {
-        padding-top: 26px;
+        padding: 24px;
+    }
+
+    .app-shell {
+        width: min(100%, 1320px);
+    }
+
+    .search-container {
+        display: grid;
+        grid-template-columns: 330px minmax(320px, 1fr);
+        /*gap: 22px 28px;*/
+        align-items: center;
+    }
+
+    .brand-row,
+    .input-lupa-wrapper {
+        margin-bottom: 0;
+    }
+
+    .brand-row {
+        gap: 18px;
+    }
+
+    .logo {
+        width: 76px;
+        height: 76px;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    #search,
+    select {
+        min-height: 48px;
+    }
+
+    .controls-row {
+        grid-column: 1 / -1;
+        grid-template-columns: 385px minmax(230px, 1fr) minmax(270px, 330px);
+        align-items: end;
+        gap: 22px;
+        margin-bottom: 14px;
     }
 
     .line-buttons {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+        overflow-x: visible;
+        padding-bottom: 0;
+    }
+
+    .line-button {
+        width: 59px;
+        min-width: 59px;
+        min-height: 44px;
+        font-size: 22px;
+    }
+
+    .filters-row {
+        overflow-x: visible;
+    }
+
+    .filter-row {
+        flex: 1;
+        min-width: 0;
+        grid-template-columns: 32px minmax(72px, 1fr) 25px;
+        grid-template-rows: auto;
+        padding: 10px 12px;
+    }
+
+    .filter-icon {
+        grid-row: auto;
+    }
+
+    .switch {
+        justify-self: end;
+    }
+
+    #map {
+        height: calc(100vh - 235px);
+        min-height: 520px;
     }
 }

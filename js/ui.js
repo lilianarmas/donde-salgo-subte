@@ -5,7 +5,6 @@ export const getSearchInput = () => document.getElementById('search');
 export const getLineButtonsContainer = () => document.getElementById('lineButtons');
 export const getStationSelect = () => document.getElementById('station');
 export const getSelectedExitDiv = () => document.getElementById('selected-exit');
-export const getAlertDiv = () => document.getElementById('alert');
 export const getEscalatorFilterInput = () => document.getElementById('filterEscalator');
 export const getElevatorFilterInput = () => document.getElementById('filterElevator');
 

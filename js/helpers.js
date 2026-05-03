@@ -4,7 +4,6 @@ import {
     getLineButtonsContainer,
     getStationSelect,
     getSelectedExitDiv,
-    getAlertDiv,
     getSearchValue,
     getSelectedLineValue,
     isLineManuallySelected,
@@ -113,13 +112,13 @@ const updateMap = (highlightedExit = state.currentHighlightedExit, referencePoin
         let accessibilityInfo = '';
 
         if (accessibility.escalator === 'True') {
-            accessibilityInfo += '<br>Escalera mecánica';
+            accessibilityInfo += '<br><i class="material-icons accessibility-icon-info">escalator</i> Escalera mecánica';
         }
         if (accessibility.elevator === 'True') {
-            accessibilityInfo += '<br>Ascensor';
+            accessibilityInfo += '<br><i class="material-icons accessibility-icon-info">elevator</i> Ascensor';
         }
         if (accessibility.ramp === 'True') {
-            accessibilityInfo += '<br>Rampa';
+            accessibilityInfo += '<br><i class="material-icons accessibility-icon-info">accessible</i> Rampa';
         }
 
         let observacion = feature.properties.observacio ? `<br>${feature.properties.observacio}` : '';
@@ -293,7 +292,7 @@ export const searchAddress = async address => {
     const point = await geocodeAddress(address);
 
     if (!point) {
-        getAlertDiv().innerHTML = 'Dirección no encontrada';
+        getSelectedExitDiv().innerHTML = 'Dirección no encontrada';
         return;
     }
 
@@ -303,7 +302,6 @@ export const searchAddress = async address => {
 
     if (line && isLineManuallySelected()) {
         selectNearbyStationAndExit(point, line);
-        getAlertDiv().innerHTML = '';
         return;
     }
 
@@ -314,7 +312,6 @@ export const searchAddress = async address => {
         state.currentHighlightedExit = null;
         updateMap(null, point);
         getSelectedExitDiv().innerHTML = getNoFilteredExitsMessage();
-        getAlertDiv().innerHTML = '';
         return;
     }
 
@@ -330,15 +327,13 @@ export const searchAddress = async address => {
 
         getSelectedExitDiv().innerHTML = 'Salida sugerida: ' + nearbyBoca.properties.numero_de_;
     }
-
-    getAlertDiv().innerHTML = '';
 }
 
 const selectByAddressAndLine = async (address, line) => {
     const point = await geocodeAddress(address);
 
     if (!point) {
-        getAlertDiv().innerHTML = 'Dirección no encontrada';
+        getSelectedExitDiv().innerHTML = 'Dirección no encontrada';
         return;
     }
 
@@ -346,7 +341,6 @@ const selectByAddressAndLine = async (address, line) => {
 
     showAddressOnMap(point);
     selectNearbyStationAndExit(point, line);
-    getAlertDiv().innerHTML = '';
 }
 
 const handleLineChange = async () => {
@@ -381,7 +375,7 @@ const handleStationChange = async () => {
     const point = await geocodeAddress(address);
 
     if (!point) {
-        getAlertDiv().innerHTML = 'Dirección no encontrada';
+        getSelectedExitDiv().innerHTML = 'Dirección no encontrada';
         return;
     }
 
@@ -396,7 +390,6 @@ const handleStationChange = async () => {
     }
 
     selectNearbyExitForStation(point, line, station);
-    getAlertDiv().innerHTML = '';
 }
 
 const handleFiltersChange = async () => {
@@ -416,7 +409,7 @@ const handleFiltersChange = async () => {
     const point = await geocodeAddress(address);
 
     if (!point) {
-        getAlertDiv().innerHTML = 'DirecciÃ³n no encontrada';
+        getSelectedExitDiv().innerHTML = 'Dirección no encontrada';
         return;
     }
 
@@ -424,13 +417,11 @@ const handleFiltersChange = async () => {
 
     if (line && station && isLineManuallySelected()) {
         selectNearbyExitForStation(point, line, station);
-        getAlertDiv().innerHTML = '';
         return;
     }
 
     if (line && isLineManuallySelected()) {
         selectNearbyStationAndExit(point, line);
-        getAlertDiv().innerHTML = '';
         return;
     }
 

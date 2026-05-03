@@ -148,7 +148,7 @@ label,
 
 .line-buttons {
     display: flex;
-    gap: 9px;
+    gap: 5px;
     width: 100%;
     overflow-x: auto;
     padding: 1px 1px 8px;

@@ -1,4 +1,4 @@
-export const geojsonDataExits = // 20250324141538
+export const geojsonDataExits = // last update: 20230313
 // https://cdn.buenosaires.gob.ar/datosabiertos/datasets/sbase/bocas-subte/bocas-de-subte.geojson
 
 {

@@ -167,7 +167,8 @@ const updateMap = (highlightedExit = state.currentHighlightedExit, referencePoin
         }
 
         let observacion = feature.properties.observacio ? `<br>${feature.properties.observacio}` : '';
-        let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}${destino}${accessibilityInfo}${observacion}`;
+        let connections = feature.properties.lineas_de_ ? `<br><i class="material-icons accessibility-icon-info">sync_alt</i> Conexiones: ${feature.properties.lineas_de_}` : ''; 
+        let popupContent = `<b>Salida ${numeroSalida}</b><br>${calle} ${altura}${destino}${accessibilityInfo}${observacion}${connections}`;
 
         const highlight = highlightedExit === feature;
         const marker = createIcon(lat, lng, lineColor, popupContent, numeroSalida, accessibility, state.bocasLayer, highlight);

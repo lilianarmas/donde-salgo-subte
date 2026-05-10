@@ -1,7 +1,8 @@
 import {
     searchAddress,
     getColorLine,
-    processData
+    processData,
+    drawSubwayLines
 } from './helpers.js';
 import {
     getSearchForm,
@@ -16,8 +17,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(state.map);
 
+state.linesLayer = L.layerGroup().addTo(state.map);
 state.markerLayer = L.layerGroup().addTo(state.map);
 state.bocasLayer = L.layerGroup().addTo(state.map);
+
+drawSubwayLines();
 
 getSearchForm().addEventListener('submit', function (e) {
     e.preventDefault();

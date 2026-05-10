@@ -1,5 +1,6 @@
 import { geojsonDataExits } from '../data/bocas-de-subte.js';
 import { geojsonDataStations } from '../data/estaciones-de-subte.js';
+import { geojsonDataRed } from '../data/red-subte.js';
 import {
     getLineButtonsContainer,
     getStationSelect,
@@ -20,15 +21,59 @@ import { state } from './state.js';
 // Obtiene color de linea
 export const getColorLine = line => {
     const colores = {
-        'A': '#1E88E5', // Azul fuerte
-        'B': '#D32F2F', // Rojo oscuro
-        'C': '#303F9F', // Azul profundo
-        'D': '#388E3C', // Verde fuerte con más azul
-        'E': '#8E24AA', // Púrpura más vibrante
-        'H': '#FFC107'  // Amarillo anaranjado
+        'A': '#1E88E5',
+        'B': '#D32F2F',
+        'C': '#303F9F',
+        'D': '#388E3C',
+        'E': '#8E24AA',
+        'H': '#FFC107'
     };
     return colores[line] || 'gray';
 }
+
+const lineNameMap = {
+    'Linea A': 'A',
+    'Linea B': 'B',
+    'Linea C': 'C',
+    'Linea D': 'D',
+    'Linea E': 'E',
+    'Linea H': 'H'
+};
+
+const drawnSegmentKeys = new Set();
+
+const getSegmentKey = coords => {
+    return coords.map(c => `${parseFloat(c[0]).toFixed(5)},${parseFloat(c[1]).toFixed(5)}`).join(';');
+};
+
+export const drawSubwayLines = () => {
+    if (!state.linesLayer) return;
+
+    drawnSegmentKeys.clear();
+
+    geojsonDataRed.features.forEach(feature => {
+        const letter = lineNameMap[feature.properties.nombre];
+        if (!letter) return;
+
+        const coords = feature.geometry.coordinates;
+        const key = getSegmentKey(coords);
+        if (drawnSegmentKeys.has(key)) return;
+        drawnSegmentKeys.add(key);
+
+        const latLngs = coords.map(c => [c[1], c[0]]);
+        const color = getColorLine(letter);
+
+        L.polyline(latLngs, {
+            color,
+            weight: 4,
+            opacity: 1,
+            lineCap: 'round',
+            lineJoin: 'round',
+            interactive: false,
+            bubblingMouseEvents: false
+        }).addTo(state.linesLayer);
+    });
+};
 
 const updateStations = () => {
     let lineSelected = getSelectedLineValue();

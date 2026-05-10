@@ -10,5 +10,6 @@ export const state = {
     addressMarker: null,
     currentHighlightedExit: null,
     markerLayer: null,
-    bocasLayer: null
+    bocasLayer: null,
+    linesLayer: null
 };

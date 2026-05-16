@@ -5,6 +5,7 @@ import {
     getLineButtonsContainer,
     getStationSelect,
     getSelectedExitDiv,
+    getExitList,
     getSearchValue,
     getSelectedLineValue,
     isLineManuallySelected,
@@ -41,6 +42,7 @@ const lineNameMap = {
 };
 
 const drawnSegmentKeys = new Set();
+const markerById = new Map();
 
 const getSegmentKey = coords => {
     return coords.map(c => `${parseFloat(c[0]).toFixed(5)},${parseFloat(c[1]).toFixed(5)}`).join(';');
@@ -128,8 +130,12 @@ const updateMap = (highlightedExit = state.currentHighlightedExit, referencePoin
     let station = getStationSelectValue();
     state.markerLayer.clearLayers();
     state.bocasLayer.clearLayers();
+    markerById.clear();
 
-    if (!line || !station) return;
+    if (!line || !station) {
+        updateExitList();
+        return;
+    }
 
     // Mostrar la estación principal
     let stationSelected = geojsonDataStations.features.find(f =>
@@ -172,6 +178,7 @@ const updateMap = (highlightedExit = state.currentHighlightedExit, referencePoin
 
         const highlight = highlightedExit === feature;
         const marker = createIcon(lat, lng, lineColor, popupContent, numeroSalida, accessibility, state.bocasLayer, highlight);
+        markerById.set(feature.properties.id, marker);
 
         if (highlight) {
             marker.openPopup();
@@ -185,7 +192,115 @@ const updateMap = (highlightedExit = state.currentHighlightedExit, referencePoin
             [latSalida, lngSalida]
         ], { padding: [40, 40], maxZoom: 17 });
     }
+
+    updateExitList();
 }
+
+const updateExitList = () => {
+    const sidebar = getExitList();
+    if (!sidebar) return;
+
+    const line = getSelectedLineValue();
+    const station = getStationSelectValue();
+
+    if (!line || !station || !state.map) {
+        sidebar.innerHTML = '';
+        sidebar.classList.remove('has-exits');
+        return;
+    }
+
+    const stationExits = getExitsByLineAndStation(line, station);
+    const filteredExits = filterExitsByAccessibility(stationExits);
+
+    if (!filteredExits.length) {
+        sidebar.innerHTML = '';
+        sidebar.classList.remove('has-exits');
+        return;
+    }
+
+    let html = '<div class=\'exit-list-header\'>Salidas disponibles</div>';
+
+    filteredExits.forEach(feature => {
+        let numero = feature.properties.numero_de_;
+        let calle = feature.properties.calle || '';
+        let altura = feature.properties.altura || '';
+        let destino = feature.properties.destino_bo || '';
+        let observacio = feature.properties.observacio || '';
+        let connections = feature.properties.lineas_de_ || '';
+        let escalator = feature.properties.escalera_m === 'True';
+        let elevator = feature.properties.ascensor === 'True';
+        let ramp = feature.properties.rampa === 'True';
+
+        let isHighlighted = feature === state.currentHighlightedExit;
+
+        let distanceText = '';
+        if (state.addressMarker && state.map) {
+            const addrLatLng = state.addressMarker.getLatLng();
+            const [lng, lat] = feature.geometry.coordinates;
+            const dist = state.map.distance(addrLatLng, L.latLng(lat, lng));
+            distanceText = dist >= 1000
+                ? (dist / 1000).toFixed(1) + ' km'
+                : Math.round(dist) + ' m';
+        }
+
+        let destinoLine = (destino && !destino.includes('Salida'))
+            ? `<div class='exit-list-destino'>${destino}</div>`
+            : '';
+
+        let platformLine = observacio
+            ? `<div class='exit-list-platform'>${observacio}</div>`
+            : '';
+
+        let connectionsLine = connections
+            ? `<div class='exit-list-connections'><i class='material-icons'>sync_alt</i> ${connections}</div>`
+            : '';
+
+        let accHtml = '';
+        if (escalator) accHtml += '<i class=\'material-icons\'>escalator</i>';
+        if (elevator) accHtml += '<i class=\'material-icons\'>elevator</i>';
+        if (ramp) accHtml += '<i class=\'material-icons\'>accessible</i>';
+        let accLine = accHtml
+            ? `<div class='exit-list-accessibility'>${accHtml}</div>`
+            : '';
+
+        html += `
+            <div class='exit-list-item${isHighlighted ? ' is-highlighted' : ''}' data-exit-id='${feature.properties.id}'>
+                <div class='exit-list-item-header'>
+                    <span class='exit-list-number'>Salida ${numero}</span>
+                    ${distanceText ? `<span class='exit-list-distance'>${distanceText}</span>` : ''}
+                </div>
+                <div class='exit-list-address'>${calle} ${altura}</div>
+                ${destinoLine}
+                ${platformLine}
+                ${connectionsLine}
+                ${accLine}
+            </div>
+        `;
+    });
+
+    sidebar.innerHTML = html;
+    sidebar.classList.add('has-exits');
+
+    Array.from(sidebar.querySelectorAll('.exit-list-item')).forEach(item => {
+        item.addEventListener('click', () => {
+            const exitId = Number(item.dataset.exitId);
+            const feature = filteredExits.find(f => f.properties.id === exitId);
+            if (!feature) return;
+
+            const [lng, lat] = feature.geometry.coordinates;
+            state.map.setView([lat, lng], 17);
+
+            const marker = markerById.get(exitId);
+            if (marker) {
+                marker.openPopup();
+            }
+
+            state.currentHighlightedExit = feature;
+            getSelectedExitDiv().innerHTML = 'Salida sugerida: ' + feature.properties.numero_de_;
+            updateExitList();
+        });
+    });
+};
 
 const showAddressOnMap = point => {
     if (state.addressMarker) {

@@ -307,8 +307,106 @@ select:disabled {
 }
 
 .map-shell {
-    position: relative;
     width: 100%;
+}
+
+.map-container {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+}
+
+.exit-list-sidebar {
+    display: none;
+    width: 100%;
+    max-height: 520px;
+    overflow-y: auto;
+}
+
+.exit-list-sidebar.has-exits {
+    display: none;
+}
+
+.exit-list-header {
+    padding: 10px 14px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--yellow);
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.exit-list-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(18, 18, 18, 0.76);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.exit-list-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.exit-list-item.is-highlighted {
+    background: rgba(255, 210, 26, 0.10);
+    border-left: 3px solid var(--yellow);
+}
+
+.exit-list-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 3px;
+}
+
+.exit-list-number {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--yellow);
+}
+
+.exit-list-distance {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.exit-list-address {
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 2px;
+}
+
+.exit-list-destino,
+.exit-list-platform {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 2px;
+}
+
+.exit-list-connections {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.exit-list-connections .material-icons {
+    font-size: 14px;
+}
+
+.exit-list-accessibility {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.exit-list-accessibility .material-icons {
+    font-size: 18px;
+    color: var(--yellow);
 }
 
 #selected-exit {
@@ -436,6 +534,30 @@ select:disabled {
 
     .switch {
         justify-self: end;
+    }
+
+    .map-shell {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    .map-container {
+        flex: 1;
+    }
+
+    .exit-list-sidebar {
+        width: 330px;
+        flex: 0 0 auto;
+        max-height: calc(100vh - 235px);
+        border: 1px solid var(--panel-border);
+        border-radius: 5px;
+        background: rgba(14, 14, 14, 0.82);
+        overflow-y: auto;
+    }
+
+    .exit-list-sidebar.has-exits {
+        display: block;
     }
 
     #map {

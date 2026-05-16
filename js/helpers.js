@@ -345,7 +345,7 @@ const geocodeAddress = async address => {
 
     if (!query) return null;
 
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}, Buenos Aires, Argentina`;
 
     try {
         const response = await fetch(url, {
